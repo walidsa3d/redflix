@@ -5,27 +5,31 @@ import subprocess
 import inquirer
 import argparse
 
+sublist=['arabicmoviesonline', 'fullforeignmovies', 'fullmoviesonyoutube','sciencedocumentaries']
+useragent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.111 Safari/537.36"
+def get_post_list(sub):
+	r = praw.Reddit(user_agent=useragent)
+	submissions = r.get_subreddit(sub).get_hot(limit=20)
+	return submissions
+
+def play_video(player,url):
+	subprocess.Popen([player, url])
+
 
 subs = [
-  inquirer.List('sub',
-                message="What sub do you choose?",
-                choices=['arabicmoviesonline', 'fullforeignmovies', 'fullmoviesonyoutube'],
-            ),
-]
+	  inquirer.List('sub',
+	                message="Choose a SubReddit",
+	                choices=sublist,
+	            ),
+	]
 choose = inquirer.prompt(subs)
-r = praw.Reddit(user_agent='my_cool_application')
-submissions = r.get_subreddit(choose['sub']).get_hot(limit=20)
 movies={}
+submissions=get_post_list(choose['sub'])
 for index, submission in enumerate(submissions):
 	movies[index]=submission
 	print colored(str(index)+"\t", "red"), colored(movies[index].title, "blue")
-
 choice=raw_input("choose a movie \t")
 movie_url=movies[int(choice)].url
-p1 = subprocess.Popen(['youtube-dl',movie_url,'-o'], stdout=PIPE)
-p2 = subprocess.Popen(['vlc], stdin=p1.stdout])
-# subprocess.call(['vlc','-'])
-p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-p2.communicate()[0]
+play_video('vlc',movie_url)
 
 
